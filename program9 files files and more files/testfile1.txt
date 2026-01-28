@@ -1,0 +1,2 @@
+Hello world! The file has been accessed using C's built in fopen and fputs functions. HEHEHEHA!
+From Emman :D
