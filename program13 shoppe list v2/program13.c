@@ -6,7 +6,6 @@
 
 char** addToList(char** list, int* count, int* capacity, char* newItem);
 char* promptUserItem();
-void exportListToDataFile(); // potential feature - add persistent storage?
 
 // adds new item to the shopping list 
 char** addToList(char** list, int* count, int* capacity, char* newItem) {
@@ -65,11 +64,10 @@ char* promptUserItem() {
 }
 
 int main() {
-    FILE* shoppingFile;
     // set initial shopping item count and list capacity
     // can be changed later when adding new items
     int count = 0;
-    int capacity = 1*sizeof(char*);
+    int capacity = 8*sizeof(char*);
     char** list = malloc(capacity);
     while(1) {
         char* item = promptUserItem();
