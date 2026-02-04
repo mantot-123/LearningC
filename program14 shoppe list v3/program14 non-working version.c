@@ -5,6 +5,13 @@
 #include<stdlib.h>
 #include<string.h>
 
+#define MAX_ITEM_NAME_LENGTH 100 // temporary thing, i'll make sure to include dynamic sizing at some point
+
+typedef struct {
+    int charCount;
+    char* name;
+} Item;
+
 typedef struct {
     int count;
     int capacity;
@@ -78,13 +85,12 @@ int exportListToFile(ShoppingList* listObj) {
     }
 
     // use the arrow operator (->) instead of the dot (.) if you want to dereference the struct and access its members
-    fwrite(&listObj->count, sizeof(int), 1, shoppingFile);
-    fwrite(&listObj->capacity, sizeof(int), 1, shoppingFile);
+    fwrite(&listObj->count, sizeof(ShoppingList), 1, shoppingFile);
+    fwrite(&listObj->capacity, sizeof(ShoppingList), 1, shoppingFile);
 
     for(int i=0; i<listObj->count; i++) {
-        int len = strlen(listObj->items[i]) + 1;
-        fwrite(&len, sizeof(int), 1, shoppingFile);
-        fwrite(listObj->items[i], sizeof(char), len, shoppingFile);
+        // sizeof char = 1, so on the second parameter we pass 1
+        fwrite(listObj->items[i], 1, strlen(listObj->items[i]), shoppingFile);
     }
 
     fclose(shoppingFile);
@@ -93,28 +99,22 @@ int exportListToFile(ShoppingList* listObj) {
 
 ShoppingList* readListFromFile() {
     FILE* shoppingFile = fopen("shoppinglist.dat", "r+");
+
+    if(shoppingFile == NULL) {
+        printf("Failed to open shopping list file (shoppinglist.dat)\n");
+        return NULL;
+    }
+
     ShoppingList* listObj = malloc(sizeof(ShoppingList));
 
-    // check if the shopping list data file has been loaded, if not, create a new shopping list object entirely
-    if(shoppingFile == NULL) {
-        printf("Failed to open shopping list file (shoppinglist.dat). Creating a new shopping list\n");
-        int count = 0;
-        int capacity = 8*sizeof(char*);
-        char** list = malloc(capacity);
-        listObj->count = count;
-        listObj->capacity = capacity;
-        listObj->items = list;
-        return listObj;
-    }
+    // checks if the data file is empty, then it loads empty shopping list data
 
     // load the capacity and item count data
     size_t readCount = fread(&listObj->count, sizeof(int), 1, shoppingFile);
     size_t readCapacity = fread(&listObj->capacity, sizeof(int), 1, shoppingFile);
 
-    // if the shopping list data is corrupted or not loaded (list length or capacity is missing)
-    // create a new empty shopping list
+    // check if the capacity and item counts have been loaded correctly, if not, allocate a new list entirely
     if(readCount != 1 || readCapacity != 1) {
-        printf("Failed to open shopping list file (shoppinglist.dat). File has been found corrupted or empty. Creating a new shopping list\n");
         int count = 0;
         int capacity = 8*sizeof(char*);
         char** list = malloc(capacity);
@@ -125,18 +125,13 @@ ShoppingList* readListFromFile() {
     }
 
     // read each individual shopping item name from the list
-    listObj->items = malloc(listObj->capacity);
+    char** list = malloc(listObj->capacity);
     for(int i=0; i<listObj->count; i++) {
-        int len; // get their lengths block by block
-        fread(&len, sizeof(int), 1, shoppingFile);
-
-        char* item = malloc(len);
-        fread(item, 1, len, shoppingFile); // read each string from the file block-by-block
-
-        listObj->items[i] = item; 
+        fread(list+i, 1, MAX_ITEM_NAME_LENGTH, shoppingFile);
     }
 
-    fclose(shoppingFile);
+    listObj->items = list;
+
     return listObj;
 }
 
@@ -153,7 +148,7 @@ int main() {
                 continue;
             }
 
-            exportListToFile(shopListObj);
+            printf("%d", exportListToFile(shopListObj));
 
             // print the shopping list
             printf("Your current shopping list:\n");
