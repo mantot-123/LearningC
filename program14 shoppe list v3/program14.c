@@ -13,21 +13,21 @@ typedef struct {
 
 // adds new item to the shopping list 
 ShoppingList* addToList(ShoppingList* list, char* newItem) {
-    int limit = (*list).capacity / sizeof(char*);
+    int limit = list->capacity / sizeof(char*);
     // check if the shopping list is about to get full
-    if((*list).count >= limit) {
-        (*list).capacity = (*list).capacity*2;
-        char** newItems = realloc((*list).items, (*list).capacity);
-        if((*list).items == NULL) {
+    if(list->count >= limit) {
+        list->capacity = list->capacity*2;
+        char** newItems = realloc(list->items, list->capacity);
+        if(list->items == NULL) {
             free(newItem);
             printf("Error occured while adding new item %s: Failed to allocate new memory for the shopping list.\n", newItem);
             return NULL;
         }
-        (*list).items = newItems;
+        list->items = newItems;
     }
 
-    (*list).items[(*list).count] = newItem;
-    (*list).count++;
+    list->items[list->count] = newItem;
+    list->count++;
     printf("Item successfully added: %s\n", newItem);
     return list;
 }
